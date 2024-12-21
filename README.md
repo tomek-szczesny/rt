@@ -10,9 +10,14 @@ This tool is the quickest way to find:
 
 The tool works with prebuilt resistor values lists and accepts custom value lists, representing your personal, company or supplier's stock.
 
-#### Screenshots
+## Screenshots
 
-#### Installation
+![2024-12-21-213726_654x545_scrot](https://github.com/user-attachments/assets/e8807fe7-acb8-446c-bb08-bf79df493f50)
+
+![2024-12-21-213701_714x553_scrot](https://github.com/user-attachments/assets/1b5e5dc9-3691-4f37-a37a-01424a1c2db5)
+
+
+## Installation
 
 ```
 git clone https://github.com/tomek-szczesny/rt.git
@@ -21,7 +26,7 @@ make
 sudo make install
 ```
 
-#### Usage
+## Usage
 
 ```
 rt [options] [function] num0 [num1] [num2] ...
