@@ -243,6 +243,9 @@ double prl3(double r1, double r2, double r3) {
 // Evaluate resistor network struct
 double eval_res(struct res * res) {
 	switch(res->type) {
+		case T_NONE:
+			return -1;
+			break;
 		case T_SINGLE: 
 			return res->i[0];
 			break;
@@ -300,6 +303,8 @@ bool isresmax(struct res * r) {
 // No newline at the end
 void print_res(struct res * res) {
 	switch(res->type) {
+		case T_NONE:
+			break;
 		case T_SINGLE: 
 			r_print(res, 0);
 			break;
@@ -373,6 +378,7 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 	double rv;		// Return value
 	double rvb;		// Return value
 
+	rb.type = T_NONE;
 	rx.type = rt;
 
 	if (rt == T_SINGLE) {

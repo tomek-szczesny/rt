@@ -16,7 +16,7 @@ struct vss v_list;
 // Unfortunately stuff gets really complicated for 4 resistors and beyond
 // So let's pretend we're good with just three.
 //
-enum res_type {	
+enum res_type { T_NONE = 0,	
 		T_SINGLE = 1,
 		T_2S = 2,
 		T_2P = 3,
