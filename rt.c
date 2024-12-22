@@ -236,10 +236,8 @@ double prl(double r1, double r2) {
 }
 
 // Parallel triple resistor connection
-// Explicit definition made rt work 8x faster in overall
-// instead of prl(1, prl(2,3))
 double prl3(double r1, double r2, double r3) {
-	return (r1*r2*r3)/(r1+r2+r3);
+	return (r1*r2*r3)/((r1*r2)+(r2*r3)+(r3*r1));
 }
 
 // Evaluate resistor network struct
@@ -372,6 +370,8 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 	struct res rx;
 	double e;
 	double eb = 1e6;
+	double rv;		// Return value
+	double rvb;		// Return value
 
 	rx.type = rt;
 
@@ -381,6 +381,7 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 		rx.i[0] = r1;
 		if (!nopush) r_list_push(&rx, e);
 		rb = rx;
+		rvb = r1;
 	}
 	if (rt == T_2S) {
 		int imax = vfind_i(value, LE);
@@ -388,12 +389,14 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 			r1 = v_list.vals[i];
 			r2 = vfind(value - r1, mode);
 			e = r1+r2;
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r2;
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
@@ -403,12 +406,14 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 			r1 = v_list.vals[i];
 			r2 = vfind(r1*value/(r1-value), mode);
 			e = prl(r1, r2);
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r2;
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
@@ -431,12 +436,14 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 				rx.type = T_2P;
 				e = prl(r1, r2);
 			}
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r2;
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
@@ -446,12 +453,14 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 			r1 = v_list.vals[i];
 			r2 = find_res_t(&r23, value - r1, T_2S, mode, 1);
 			e = r1+r2;
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r23.i[0]; rx.i[2] = r23.i[1];
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
@@ -461,12 +470,14 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 			r1 = v_list.vals[i];
 			r2 = find_res_t(&r23, value - r1, T_2P, mode, 1); 
 			e = r1+r2;
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r23.i[0]; rx.i[2] = r23.i[1];
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
@@ -476,12 +487,14 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 			r1 = v_list.vals[i];
 			r2 = find_res_t(&r23, (r1*value/(r1-value)), T_2S, mode, 1);
 			e = prl(r1, r2);
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r23.i[0]; rx.i[2] = r23.i[1];
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
@@ -491,12 +504,14 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 			r1 = v_list.vals[i];
 			r2 = find_res_t(&r23, (r1*value/(r1-value)), T_2P, mode, 1);
 			e = prl(r1, r2);
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r23.i[0]; rx.i[2] = r23.i[1];
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
@@ -519,17 +534,19 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 				rx.type = T_1S2P;
 				e = prl(r1, r2);
 			}
+			rv = e;
 			e = (e/value)-1;
 			rx.i[0] = r1; rx.i[1] = r23.i[0]; rx.i[2] = r23.i[1];
 			if (!nopush) r_list_push(&rx, e);
 			if (fabs(e) < eb) {
 				rb = rx;
 				eb = fabs(e);
+				rvb = rv;
 			}
 		}
 	}
 	if (str) *r = rb;
-	return eval_res(&rb);
+	return rvb;
 }
 
 double find_res (struct res * r, double value, int rs, enum find_mode mode, bool nopush) {
@@ -869,6 +886,10 @@ int main(int argc, char **argv)
 		if (!strcmp(argv[i], "-l")) {
 			i++;
 			lf = argv[i];
+			continue;
+		}
+		if (!strcmp(argv[i], "-d")) {
+			debug = 1;
 			continue;
 		}
 		 	
