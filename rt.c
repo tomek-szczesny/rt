@@ -658,7 +658,7 @@ void r_list_print(enum func f) {
 	if (i>0) {
 		if (fabs(r_list[i-1].e) < r_list[i].e) i--;
 	}
-	j = i + 1; j = fmin(j, r_list_items-1);
+	j = i + 1; j = fmin(j, r_list_items);
 
 	while (r_list[j].e <= r_list[i].e * (1.01)  && j < r_list_items-1) j++;
 	j--;
