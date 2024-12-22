@@ -1,5 +1,5 @@
 default: 
-	gcc -O3 -o rt rt.c -lm
+	gcc -Ofast -o rt rt.c -lm
 
 install:
 	install -p -s rt /usr/local/bin

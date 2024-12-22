@@ -7,16 +7,7 @@
 #include <string.h>
 #include "rt.h"
 
-// TODO
-// - get_list (from file) (remove 0R)
-// - double find_res(*res, double value, int rs, enum mode)
-// - results_add(*results_list, char * line, double error)
-// - results_clear(*results_list)
-// - mode_single(value) (spin-off of find_res)
-// - mode_ratioed(*vals)
-// - mode_voltages(*vals)
-
-// returns negative number if it had found any problems
+// Interprets user input resistance
 double r_get(char * in) {
 	// Attempts to catch values such as:
 	// 12.34, 12.34k, 12k34
@@ -47,6 +38,8 @@ double r_get(char * in) {
 
 }
 
+// Interprets user input error value
+// Currently not in use
 double e_get(char * in) {
 	// Attempts to catch values such as:
 	// 0.03, 0.1%, 1%
@@ -63,8 +56,8 @@ double e_get(char * in) {
 
 }
 
+// Handles reading the resistor value list
 void get_list(char * name) {
-	//TODO: The default list
 	FILE * f_list;
 	char fpath[100];
 
@@ -180,7 +173,6 @@ void r_print(struct res * r, int i) {
 
 // Search the v_list for the value "key".
 // Supports multiple modes.
-// TODO: Implement binary search (the input array is sorted).
 int vfind_i(double key, enum find_mode mode) {
 	
 	if (mode == MIN) return 0;
@@ -189,21 +181,20 @@ int vfind_i(double key, enum find_mode mode) {
 	//if (isinf(key)) return 0;
 
 	// Search for GE
-	//int i = 0;
-	//while (v_list.vals[i] < key) i++;
-	int i = v_list.n/2;
-	int step = i/2;
+	// A simple binary search
+	// This used to be a choke point, hence those weird optimizations
+	unsigned short int i = v_list.n >> 1;
+	unsigned short int step = i >> 1;
 	while (step > 1) {
-		i += (v_list.vals[i] < key) ? step : -step;
-		step /= 2;
-		if (step == 1) {
-			while (v_list.vals[i] > key) i--;
-			while (v_list.vals[i] < key) i++;
-		}
+		if (v_list.vals[i] < key) i+= step;
+		else i -= step;
+		step = step >> 1;
 	}
+	while (v_list.vals[i] > key) i--;
+	while (v_list.vals[i] < key) i++;
+
 	bool lo = (i == 0);
 	bool hi = (i >= (v_list.n - 1));
-	//bool eq = abs(v_list.vals[i] - key) < key * 10e-6;
 	bool eq = v_list.vals[i] == key;
 
 	switch (mode) {
@@ -244,6 +235,13 @@ double prl(double r1, double r2) {
 	return (r1*r2)/(r1+r2);
 }
 
+// Parallel triple resistor connection
+// Explicit definition made rt work 8x faster in overall
+// instead of prl(1, prl(2,3))
+double prl3(double r1, double r2, double r3) {
+	return (r1*r2*r3)/(r1+r2+r3);
+}
+
 // Evaluate resistor network struct
 double eval_res(struct res * res) {
 	switch(res->type) {
@@ -266,7 +264,7 @@ double eval_res(struct res * res) {
 			return prl(res->i[0], res->i[1] + res->i[2]);
 			break;
 		case T_1P2P:
-			return prl(res->i[0], prl(res->i[1], res->i[2]));
+			return prl3(res->i[0], res->i[1], res->i[2]);
 	}
 	printf("oopsie in eval_res! res.type=%d\n", res->type);
 	return -1;
@@ -364,8 +362,6 @@ void print_res(struct res * res) {
 // - rt: Resistor group type (find_res_t only)
 // - mode: accepts CLOSEST, GREATER, LOWER, GE, LE
 // - nopush: Do not store result in "r_list" results list
-// TODO: Fix 3P and 3S algorithms to stop finding equivalent results
-// TODO: 1S2X, 1P2X algorithms? :)
 
 double find_res_t (struct res * r, double value, enum res_type rt, enum find_mode mode, bool nopush) {
 	bool str = (r != NULL);
@@ -425,12 +421,12 @@ double find_res_t (struct res * r, double value, enum res_type rt, enum find_mod
 				rx.type = T_2S;
 				e = r1+r2;
 			} 
-			if (r1 > value) {		// Parallel
+			if (r1 > value) {	// Parallel
 				r2 = vfind(r1*value/(r1-value), mode);
 				rx.type = T_2P;
 				e = prl(r1, r2);
 			}
-			if (r1 == value) {		// Parallel
+			if (r1 == value) {
 				r2 = v_list.max;
 				rx.type = T_2P;
 				e = prl(r1, r2);
@@ -547,37 +543,9 @@ double find_res (struct res * r, double value, int rs, enum find_mode mode, bool
 	}
 	if (rs == 2) {
 		find_res_t(&rb, value, TS_2X, mode, nopush);
-		/*
-		const enum res_type types[] = {T_2S, T_2P};
-		for (i=0; i<=1;i++) {	
-			e = find_res_t(&rr, value, types[i], mode, nopush);
-			//if (e < d0) continue;
-			e /= value;
-			e -= 1;
-			e = fabs(e);
-			if (e < eb) {
-				rb = rr;
-				eb = e;
-			}
-		}
-		*/
 	}
 	if (rs == 3) {
 		find_res_t(&rb, value, TS_3X, mode, nopush);
-		/*
-		const enum res_type types[] = {T_1S2S, T_1S2P, T_1P2S, T_1P2P};
-		for (i=0; i<=3;i++) {	
-			e = find_res_t(&rr, value, types[i], mode, nopush);
-			//if (e < 0) continue;
-			e /= value;
-			e -= 1;
-			e = fabs(e);
-			if (e < eb) {
-				rb = rr;
-				eb = e;
-			}
-		}
-		*/
 	}
 	if (str) *r = rb;
 	return eval_res(&rb);
@@ -647,7 +615,7 @@ void r_list_trim(int items) {
 	// At this point, i is an index of the lowest error result.
 	// j is an index of the last lowest error result.
 
-	// Let's sort results with 0% error by the resistance of the first item
+	// Let's sort results with minimal error by the resistance of the first item
 	qsort(&r_list[i], j-i+1, sizeof(struct result), cmprr);
 
 	// And now trim the undesired results
@@ -686,10 +654,10 @@ void r_list_print(enum func f) {
 			printf("%d: ",k+1);
 			curx(5);
 			print_res(r_list[k].rs);
-			curx(25);
+			curx(5+resfw);
 			printf("= ");
 			rf_print(eval_res(r_list[k].rs));
-			curx(35);
+			curx(5+resfw+10);
 			printf("\tError: %.2g%%\n", r_list[k].e*100);
 		}
 	}
@@ -701,11 +669,11 @@ void r_list_print(enum func f) {
 			if (k > j) printf(normal);
 			printf("%d: ",k+1);
 			for (l=0; l<nres; l++) {
-				curx(5+20*l);
+				curx(5+resfw*l);
 				print_res(&(r_list[k].rs[l]));
 				//if (l < nres-1) printf(" : ");
 			}
-			curx(5+20*l);
+			curx(5+resfw*l);
 			printf("Error: %.2g%%\n", r_list[k].e*100);
 		}
 	}
@@ -823,17 +791,18 @@ double find_weights(int n, double * wr, int er)
 			i = 1;
 			ptr = eval_res(&trs[minp]);
 			if (e < 1e-6) e = 4e-2;
+			else e /= 4;
 			while (ptr >= eval_res(&trs[minp])) {
-				find_res(&trs[minp], eval_res(&trs[minp])*(1+(i*e/4)), tes[minp], GE, 1);
+				find_res(&trs[minp], eval_res(&trs[minp])*(1+(i*e)), tes[minp], GE, 1);
 				i++;
 			}
 		}
 	} 
 	while (tes[n-1] < er+1);
 
-
 	free(trs);
 	free(tes);
+	free(tesc);
 	free(r);
 	
 	return be;
@@ -892,10 +861,7 @@ int main(int argc, char **argv)
 	lf = "default";
 	printf("\n");
 	
-	//debug = 1;
-
 	if (argc == 1) usage();
-
 
 	int i = 0;
 	while (i < (argc-1)) {
@@ -903,18 +869,9 @@ int main(int argc, char **argv)
 		if (!strcmp(argv[i], "-l")) {
 			i++;
 			lf = argv[i];
-			//get_list(argv[i]);
 			continue;
 		}
 		 	
-		// error
-		// TODO: Get rid of it.. 
-		// TODO: Add "-v" option to show more results
-		if (!strcmp(argv[i], "-e")) {
-			e_d = e_get(argv[++i]);
-			if (e_d < 0 || e_d > 1.01) usage();
-			continue;
-		}
 		// If no other option is detected, try parsing a function switch
 		break;
 	}
