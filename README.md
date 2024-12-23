@@ -49,7 +49,7 @@ function: (one function only)
 	-r	  Look for a set of resistors satisfying a given ratio between them.
 		  If only one value is given analyze for the ratio value:1 otherwise,
 		  additional values are interpreted as weights of each resistor.
-		  Error is the product of the maximum and minimum resistance/weight ratio, minus one.
+		  Error is the quotient of the maximum and minimum resistance/weight ratio, minus one.
 
 Examples:
 		  Find the best approximation of 12.34k resistance:
