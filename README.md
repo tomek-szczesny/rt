@@ -29,37 +29,33 @@ sudo make install
 ## Usage
 
 ```
-rt [options] [function] num0 [num1] [num2] ...
+rt [options] [function] value0 value1 value2...
 
-Options:
+options:
 
--l [name]    Uses a list of available values from a file 'name'.
+	-l [name]  Use a list of values from 'name'. (unspecified uses 'default')
+		   Search precedence:
+		     /Absolute/Path/name
+		     ./lists/name
+		     ~/.config/rt/lists/name
+		     /var/lib/rt/lists/name
 
-The list file is looked up in the following locations (in this order):
-(full path to a file)
-./lists/name
-$HOME/.config/rt/lists/name
-/var/lib/rt/lists/name
-If unspecified, a list 'default' is used.
+function: (one function only)
 
-Functions:
-    Only one function can be specified.
-    -c    Finds a combination of resistors approximating the given value.
-          Only one numerical argument is anticipated.
-          This is the default function.
+	-c	  Find a combination of resistors approximating a single given value. (default)
 
-    -r    Looks for a set of resistors satisfying a given ratio between them.
-          If one numerical argument is given, the tool will look for a ratio num:1.
-          If more values are provided, the tool will interpret them as weighs of
-          each resistor in the set.
+	-r	  Look for a set of resistors satisfying a given ratio between them.
+		  If only one value is given analyze for the ratio value:1 otherwise,
+		  additional values are interpreted as weights of each resistor.
+		  Error is the product of the maximum and minimum resistance/weight ratio, minus one.
 
 Examples:
-    Find the best approximation of 12.34k resistance:
-    rt 12.34k
+		  Find the best approximation of 12.34k resistance:
+		  rt 12.34k
 
-    Find the best approximation of 12.34k resistance in E12 series:
-    rt -l e12 12.34k
+		  Find the best approximation of 12.34k resistance in E24 series:
+		  rt -l e24 12.34k
 
-    Find the best set of resistors to build a 5-bit DAC resistor ladder:
-    rt -r 1 2 4 8 16
+		  Find the best set of resistors to build a 5-bit DAC resistor ladder:
+		  rt -r 1 2 4 8 16
 ```

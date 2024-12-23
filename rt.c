@@ -835,43 +835,37 @@ double find_weights(int n, double * wr, int er)
 //----------------------------------------------------------------------------//
 void usage()
 {
-	printf("Resistor Tool\n");
-	printf("by Tomek Szczęsny 2024\n\n");
+	printf("Resistor Tool by Tomek Szczęsny 2024\n\n");
 	printf("Usage:\n");
-	printf("rt [options] [function] num0 [num1] [num2] ...\n");
+	printf("rt [options] [function] value0 value1 value2...\n");
 	printf("\n");
-	printf("Options:\n");
+	printf("options:\n");
 	printf("\n");
-	printf("\t-l [name]\tUses a list of available values from a file 'name'.\n");
-	printf("\t\t\tThe list file is looked up in the following locations (in this order):\n");
-	printf("\t\t\t(full path to a file)\n");
-	printf("\t\t\t./lists/name\n");
-	printf("\t\t\t$HOME/.config/rt/lists/name\n");
-	printf("\t\t\t/var/lib/rt/lists/name\n");
-	printf("\t\t\tIf unspecified, a list 'default' is used.\n");
+	printf("\t-l [name]  Use a list of values from 'name'. (unspecified uses 'default')\n");
+	printf("\t\t   Search precedence:\n");
+	printf("\t\t     /Absolute/Path/name\n");
+	printf("\t\t     ./lists/name\n");
+	printf("\t\t     ~/.config/rt/lists/name\n");
+	printf("\t\t     /var/lib/rt/lists/name\n");
 	printf("\n");
-	printf("Functions:\n");
-	printf("\tOnly one function can be specified.");
+	printf("function: (one function only)\n");
 	printf("\n");
-	printf("\t-c\tFinds a combination of resistors approximating the given value.\n");
-	printf("\t\tOnly one numerical argument is anticipated.\n");
-	printf("\t\tThis is the default function.\n");
+	printf("\t-c\t  Find a combination of resistors approximating a single given value. (default)\n");
 	printf("\n");
-	printf("\t-r\tLooks for a set of resistors satisfying a given ratio between them.\n");
-	printf("\t\tIf one numerical argument is given, the tool will look for a ratio num0:1.\n");
-	printf("\t\tIf more values are provided, the tool will interpret them as weighs of\n");
-	printf("\t\teach resistor in the set.\n");
-	printf("\t\tThe error is defined as the product of the maximum and minimum resistance/weight ratio, minus one.\n");
+	printf("\t-r\t  Look for a set of resistors satisfying a given ratio between them.\n");
+	printf("\t\t  If only one value is given analyze for the ratio value:1 otherwise,\n");
+	printf("\t\t  additional values are interpreted as weights of each resistor.\n");
+	printf("\t\t  Error is the product of the maximum and minimum resistance/weight ratio, minus one.\n");
 	printf("\n");
 	printf("Examples:\n");
-	printf("\tFind the best approximation of 12.34k resistance:\n");
-	printf("\trt 12.34k\n");
+	printf("\t\t  Find the best approximation of 12.34k resistance:\n");
+	printf("\t\t  rt 12.34k\n");
 	printf("\n");
-	printf("\tFind the best approximation of 12.34k resistance in E24 series:\n");
-	printf("\trt -l e24 12.34k\n");
+	printf("\t\t  Find the best approximation of 12.34k resistance in E24 series:\n");
+	printf("\t\t  rt -l e24 12.34k\n");
 	printf("\n");
-	printf("\tFind the best set of resistors to build a 5-bit DAC resistor ladder:\n");
-	printf("\trt -r 1 2 4 8 16\n");
+	printf("\t\t  Find the best set of resistors to build a 5-bit DAC resistor ladder:\n");
+	printf("\t\t  rt -r 1 2 4 8 16\n");
 	exit(0);
 }
 
