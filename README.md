@@ -40,6 +40,8 @@ options:
 		     ~/.config/rt/lists/name
 		     /var/lib/rt/lists/name
 
+	-v	  Show more results. Can be used more than once.
+
 function: (one function only)
 
 	-c	  Find a combination of resistors approximating a single given value. (default)

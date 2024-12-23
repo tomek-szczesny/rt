@@ -675,12 +675,12 @@ void r_list_print(enum func f) {
 			if (k == i) printf(bold);
 			if (k > j) printf(normal);
 			printf("%d: ",k+1);
-			curx(5);
+			curx(8);
 			print_res(r_list[k].rs);
-			curx(5+resfw);
+			curx(8+resfw);
 			printf("= ");
 			rf_print(eval_res(r_list[k].rs));
-			curx(5+resfw+10);
+			curx(8+resfw+10);
 			printf("\tError: %.2g%%\n", r_list[k].e*100);
 		}
 	}
@@ -692,11 +692,11 @@ void r_list_print(enum func f) {
 			if (k > j) printf(normal);
 			printf("%d: ",k+1);
 			for (l=0; l<nres; l++) {
-				curx(5+resfw*l);
+				curx(8+resfw*l);
 				print_res(&(r_list[k].rs[l]));
 				//if (l < nres-1) printf(" : ");
 			}
-			curx(5+resfw*l);
+			curx(8+resfw*l);
 			printf("Error: %.2g%%\n", r_list[k].e*100);
 		}
 	}
@@ -848,6 +848,8 @@ void usage()
 	printf("\t\t     ~/.config/rt/lists/name\n");
 	printf("\t\t     /var/lib/rt/lists/name\n");
 	printf("\n");
+	printf("\t-v\t  Show more results. Can be used more than once.\n");
+	printf("\n");
 	printf("function: (one function only)\n");
 	printf("\n");
 	printf("\t-c\t  Find a combination of resistors approximating a single given value. (default)\n");
@@ -855,7 +857,7 @@ void usage()
 	printf("\t-r\t  Look for a set of resistors satisfying a given ratio between them.\n");
 	printf("\t\t  If only one value is given analyze for the ratio value:1 otherwise,\n");
 	printf("\t\t  additional values are interpreted as weights of each resistor.\n");
-	printf("\t\t  Error is the product of the maximum and minimum resistance/weight ratio, minus one.\n");
+	printf("\t\t  Error is the quotient of the maximum and minimum resistance/weight ratio, minus one.\n");
 	printf("\n");
 	printf("Examples:\n");
 	printf("\t\t  Find the best approximation of 12.34k resistance:\n");
@@ -877,6 +879,8 @@ int main(int argc, char **argv)
 	char * lf = malloc(80);
 	lf = "default";
 	printf("\n");
+
+	int v = 5;	// Verbosity
 	
 	if (argc == 1) usage();
 
@@ -890,6 +894,10 @@ int main(int argc, char **argv)
 		}
 		if (!strcmp(argv[i], "-d")) {
 			debug = 1;
+			continue;
+		}
+		if (!strcmp(argv[i], "-v")) {
+			v *= 3;
 			continue;
 		}
 		 	
@@ -909,7 +917,7 @@ args:
 	if (func_d == F_COMB) {
 		printf(bold);
 		printf("Input value: ");
-		curx(5+resfw);
+		curx(8+resfw);
 		printf("= ");
 		rf_print(r_get(argv[i]));
 		printf("\n\n");
@@ -927,7 +935,7 @@ args:
 		printf(normal);
 		r_list_init(1);
 		find_res (NULL, r_get(argv[i]), 2, CLOSEST, 0);
-		r_list_sort(); r_list_trim(5);
+		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 
 		printf(bold);
@@ -935,7 +943,7 @@ args:
 		printf(normal);
 		r_list_init(1);
 		find_res (NULL, r_get(argv[i]), 3, CLOSEST, 0);
-		r_list_sort(); r_list_trim(5);
+		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 	}
 	if (func_d == F_RATIO) {
@@ -956,7 +964,7 @@ args:
 		printf(bold);
 		printf("\nInput weights:\n");
 		for (j=0; j<n; j++) {
-			curx(5+resfw*j);
+			curx(8+resfw*j);
 			prncf(ws[j],resfw);
 			//if (l < nres-1) printf(" : ");
 		}
@@ -966,25 +974,25 @@ args:
 
 		r_list_init(n);
 		trymore = (find_weights(n, ws, 0) > 1e-6);
-		r_list_sort(); r_list_trim(5);
+		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 
-		if (!trymore) return 0;
+		if (!trymore && v == 5) return 0;
 		printf(bold);
 		printf("\nWith one additional resistor:\n");
 		printf(normal);
 		r_list_init(n);
 		trymore = (find_weights(n, ws, 1) > 1e-6);
-		r_list_sort(); r_list_trim(5);
+		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 
-		if (!trymore) return 0;
+		if (!trymore && v == 5) return 0;
 		printf(bold);
 		printf("\nWith two additional resistors:\n");
 		printf(normal);
 		r_list_init(n);
 		find_weights(n, ws, 2);
-		r_list_sort(); r_list_trim(5);
+		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 		free(ws);
 	}
