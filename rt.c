@@ -111,7 +111,7 @@ gl_parse:
 		}
 	}
 	if (debug) printf("List file read complete. vcount=%d\n", vcount);
-	qsort(v_vals, (vcount+1), sizeof(double), cmpf);
+	qsort(v_vals, (vcount), sizeof(double), cmpf);
 
 	// Remove entries <= 0
 	int g0 = 0;
@@ -122,14 +122,21 @@ gl_parse:
 		memmove(v_vals, v_vals + g0, (vcount) * sizeof(double));
 		v_vals = realloc(v_vals, (vcount) * sizeof(double));
 	}
-	//TODO: Remove duplicates
+
+	// Remove duplicates
+	int j = 0;
+	for (i=1;i<vcount;i++){
+		if (v_vals[i] != v_vals[j])
+			v_vals[++j] = v_vals[i];
+	}
+
+	vcount = j+1;
 
 	v_list.vals = v_vals;
 	v_list.n = vcount;
 	v_list.min = v_vals[0];
 	v_list.max = v_vals[vcount-1];
 	if (debug) printf("Created list: %d items, %g min, %g max.\n", vcount, v_vals[0], v_vals[vcount-1]);
-	int j;
 	if (debug) for (j=0;j<vcount;j++) printf("%g\t", v_vals[j]);
 	if (debug) printf("\n");
 
