@@ -131,11 +131,6 @@ void r_list_print(enum func f);
 
 // Compare doubles
 int cmpf(const void * f1, const void * f2) {
-	const double * fa;
-	const double * fb;
-	fa = f1;
-	fb = f2;
-	if (fa == fb) return 0;
-	else return (fa > fb) ? 1 : -1;
+	return *(double*) f1 - *(double*) f2;
 }
 
