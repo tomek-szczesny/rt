@@ -725,7 +725,6 @@ double find_weights(int n, double * wr, int er)
 	struct res * trs = malloc(n*sizeof(struct res));	// resistor networks
 	double ptr;
 	int * tes = malloc(n*sizeof(int));			// A number of extra resistors per each network
-	int * tesc = malloc(2*sizeof(int));			// multi resistor iteration counter
 	int sc = 0;
 	double be = 1e6;	// the best (lowest) error so far
 	double minr, maxr;	// Minimum and maximum trs/r ratio
@@ -734,33 +733,38 @@ double find_weights(int n, double * wr, int er)
 	double hv = 0;		// The highest value
 	int i = 0; // for loops
 
-	tesc[0] = 0;
-	tesc[1] = 0;
+	// Resetting tes (number of extra resistors)
+	for(i=0; i<n; i++) tes[i] = 0;
 
-	do {
+	while(1) {
 		lv = 0;
 		hv = 0;
 		int j = 0; // for other things
+	
 
-		// Resetting tes (number of extra resistors)
-		for(i=0; i<n; i++) tes[i] = 1;
-		
-		// Populating tes according to the state of tesc
-		for (i=0; i<er; i++) {
-			tes[tesc[i]] += 1;
-		}
-
-		// Advancing tesc for the next iteration
-		tesc[0]++;
-		if (tesc[0] > (n-1)) {
-			tesc[1]++;
-			tesc[0] = tesc[1];
+		// Get another extra resistor combination
+		// Until we run out of them
+find_new_tes:
+		if (er > 0) {
+			tes[0]++;
+			for (i=0; i<n-1; i++) {
+				if (tes[i]>2) {
+					tes[i] = 0;
+					tes[i+1]++;
+				}
+			}
+			if (tes[n-1]>2) break;
+			j=0;
+			for (i=0; i<n; i++) j+=tes[i];
+			if (debug) for (i=0; i<n; i++) printf("%d ", tes[i]);
+			if (debug) printf("\n");
+			if (j != er) goto find_new_tes;	
 		}
 
 		// Setting up the first guess with minimal resistances from the list 
 		i = 0;
 		while (i < n) {
-			find_res(&trs[i], v_list.min/3, tes[i], MIN, 1);
+			find_res(&trs[i], v_list.min/3, tes[i]+1, MIN, 1);
 			i++;
 		}
 		
@@ -823,16 +827,15 @@ double find_weights(int n, double * wr, int er)
 			if (e < 1e-6) e = 4e-2;
 			else e /= 4;
 			while (ptr >= eval_res(&trs[minp])) {
-				find_res(&trs[minp], eval_res(&trs[minp])*(1+(i*e)), tes[minp], GE, 1);
+				find_res(&trs[minp], eval_res(&trs[minp])*(1+(i*e)), tes[minp]+1, GE, 1);
 				i++;
 			}
 		}
+		if (er == 0) break;
 	} 
-	while (tes[n-1] < er+1);
 
 	free(trs);
 	free(tes);
-	free(tesc);
 	free(r);
 	
 	return be;
@@ -842,7 +845,7 @@ double find_weights(int n, double * wr, int er)
 //----------------------------------------------------------------------------//
 void usage()
 {
-	printf("Resistor Tool by Tomek Szczęsny 2024\n\n");
+	printf("Resistor Tool by Tomek Szczęsny 2024, 2025\n\n");
 	printf("Usage:\n");
 	printf("rt [options] [function] value0 value1 value2...\n");
 	printf("\n");
@@ -888,6 +891,7 @@ int main(int argc, char **argv)
 	printf("\n");
 
 	int v = 5;	// Verbosity
+	int vs = 0;	// Number of -v flags
 	
 	if (argc == 1) usage();
 
@@ -905,6 +909,7 @@ int main(int argc, char **argv)
 		}
 		if (!strcmp(argv[i], "-v")) {
 			v *= 3;
+			vs++;
 			continue;
 		}
 		 	
@@ -986,21 +991,26 @@ args:
 
 		if (!trymore && v == 5) return 0;
 		printf(bold);
-		printf("\nWith one additional resistor:\n");
+		printf("\nWith 1 additional resistor:\n");
 		printf(normal);
 		r_list_init(n);
 		trymore = (find_weights(n, ws, 1) > 1e-6);
 		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 
-		if (!trymore && v == 5) return 0;
-		printf(bold);
-		printf("\nWith two additional resistors:\n");
-		printf(normal);
-		r_list_init(n);
-		find_weights(n, ws, 2);
-		r_list_sort(); r_list_trim(v);
-		r_list_print(func_d);
+		j = 2;
+		do {
+			printf(bold);
+			printf("\nWith %d additional resistors:\n", j);
+			printf(normal);
+			r_list_init(n);
+			trymore = (find_weights(n, ws, j) > pow(10, -3-vs));
+			r_list_sort(); r_list_trim(v);
+			r_list_print(func_d);
+			j++;
+		}
+		while (trymore && j <= 2*n);
+
 		free(ws);
 	}
 	printf("\n");
