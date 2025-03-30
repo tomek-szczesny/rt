@@ -985,21 +985,21 @@ args:
 		printf(normal);
 
 		r_list_init(n);
-		trymore = (find_weights(n, ws, 0) > 1e-6);
+		trymore = (find_weights(n, ws, 0) > pow(10, -3-vs));
 		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 
-		if (!trymore && v == 5) return 0;
+		if (!trymore) return 0;
 		printf(bold);
 		printf("\nWith 1 additional resistor:\n");
 		printf(normal);
 		r_list_init(n);
-		trymore = (find_weights(n, ws, 1) > 1e-6);
+		trymore = (find_weights(n, ws, 1) > pow(10, -3-vs));
 		r_list_sort(); r_list_trim(v);
 		r_list_print(func_d);
 
 		j = 2;
-		do {
+		while (trymore && j <= 2*n){
 			printf(bold);
 			printf("\nWith %d additional resistors:\n", j);
 			printf(normal);
@@ -1009,7 +1009,6 @@ args:
 			r_list_print(func_d);
 			j++;
 		}
-		while (trymore && j <= 2*n);
 
 		free(ws);
 	}
