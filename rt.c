@@ -715,7 +715,7 @@ void r_list_print(enum func f) {
 // er - a number of extra resistors to try
 // Returns the error of the best solution.
 //
-double find_weights(int n, double * wr, int er)
+double find_weights(unsigned int n, double * wr, int er)
 {
 	// A local copy of weights
 	double * r = malloc(n*sizeof(double));
