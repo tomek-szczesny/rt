@@ -821,13 +821,13 @@ find_new_tes:
 			// we have to make sure that the next step 
 			// isn't the same as the last one.
 			// The second attempt should give the perfect result, if available.
-			// In case error = 0, the first next step is +1%
-			i = 1;
+			// In case error = 0, the first next step is +0.1%
+			i = 0;
 			ptr = eval_res(&trs[minp]);
-			if (e < 1e-6) e = 4e-2;
-			else e /= 4;
+			if (e < 1e-6) e = 1e-3;
+			else e /= 10;
 			while (ptr >= eval_res(&trs[minp])) {
-				find_res(&trs[minp], eval_res(&trs[minp])*(1+(i*e)), tes[minp]+1, GE, 1);
+				find_res(&trs[minp], eval_res(&trs[minp])*(1+(i*e)), tes[minp]+1, CLOSEST, 1);
 				i++;
 			}
 		}
